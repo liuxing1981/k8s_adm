@@ -1,0 +1,3 @@
+install k8s 1.9
+1 config the hosts file
+2 run ./install.sh
