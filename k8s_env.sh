@@ -1,7 +1,13 @@
 #/bin/bash
 DIST=dist
 #install docker
-docker version || yum install -y docker
+docker version || yum install -y $DIST/docker-ce-se*.rpm $DIST/docker-ce-17*.rpm
+mkdir -p /etc/docker
+cat << EOF > /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"]
+}
+EOF
 systemctl start docker && systemctl enable docker
 
 #stop firewall and selinux

@@ -1,8 +1,12 @@
 #!/bin/bash
 HOST_USERNAME=root
 HOST_PASSWD=centling
+DIST=dist
+PDSH=$DIST/pdsh
+EXPECT=$DIST/expect
 declare -A all_host=()
 
+./aliyun_yum_repo.sh
 
 #install ssh
 ssh_install() {
@@ -53,19 +57,19 @@ change_hostname() {
 }
 
 init() {
+    #load hosts file
+    grep -Ev "^$|^#" hosts > /tmp/hosts
     while read line;do
         ip=$(echo $line| awk '{print $1}')
         hostname=$(echo $line| awk '{print $2}')
 	all_host[$ip]=$hostname 	
-    done < hosts
+    done < /tmp/hosts
     #install pdsh
-    cd dist/pdsh
-    yum localinstall -y pdsh*.rpm
+    yum localinstall -y $PDSH/pdsh*.rpm
     #install expect
-    cd ../expect 
-    yum localinstall -y *.rpm    
-    cd ../..    
+    yum localinstall -y $EXPECT/*.rpm
 }
+
 
 init
 for ip in ${!all_host[@]}
@@ -85,6 +89,8 @@ do
     echo "change to aliyun yum repo"
     scp /etc/yum.repos.d/CentOS-Base.repo root@$ip:/etc/yum.repos.d/CentOS-Base.repo
     change_hostname $ip $hostname
+    #copy files
     scp -r dist root@$ip:/root
     scp k8s_env.sh root@$ip:/root
 done;
+cat /tmp/hosts | awk '{print $1}' | pdsh -w - yum clean all && yum makecache
