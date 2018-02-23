@@ -5,7 +5,7 @@ DIST=dist
 PDSH=$DIST/pdsh
 EXPECT=$DIST/expect
 declare -A all_host=()
-
+all_hosts=
 ./aliyun_yum_repo.sh
 
 #install ssh
@@ -74,23 +74,62 @@ init() {
 init
 for ip in ${!all_host[@]}
 do
-    hostname=${all_host[$ip]};
-    ssh_keygen
+    hostname=${all_host[$ip]}
+    echo ===ip=$ip======host=$hostname================
+    if [ ! -e ~/.ssh/id_rsa ];then
+        ssh_keygen
+    fi
     save_ssh_keys $ip
-    sleep 1;
+    sleep 1
     echo "$ip $hostname">>/etc/hosts
-    verify_ssh_keys $ip
-done;
-
-for ip in ${!all_host[@]}
-do
-    hostname=${all_host[$ip]};
-    scp /etc/hosts root@$ip:/etc/hosts
-    echo "change to aliyun yum repo"
-    scp /etc/yum.repos.d/CentOS-Base.repo root@$ip:/etc/yum.repos.d/CentOS-Base.repo
+    verify_ssh_keys $hostname
+    all_hosts="$all_hosts,$hostname"
+    #copy pdsh to all hosts
+    scp -r $PDSH $hostname:/tmp/
     change_hostname $ip $hostname
-    #copy files
-    scp -r dist root@$ip:/root
-    scp k8s_env.sh root@$ip:/root
-done;
-cat /tmp/hosts | awk '{print $1}' | pdsh -w - yum clean all && yum makecache
+done
+
+#define env
+alias hosts="grep -Ev '^$|^#' hosts"
+all_hosts=`echo $all_hosts | sed 's/,//'`
+master=`hosts | awk '{print $2}' | head -1`
+nodes=`echo $all_hosts | sed "s/$master,//"`
+
+echo "==============all_hosts=======$all_hosts========================"
+echo "==============master=======$master========================"
+echo "==============nodes=======$nodes========================"
+
+#clear old variables
+sed -i '/all_hosts=/d' ~/.bash_profile
+sed -i '/master=/d' ~/.bash_profile
+sed -i '/nodes=/d' ~/.bash_profile
+#add new variables to the env
+echo "export all_hosts=$all_hosts" >> ~/.bash_profile
+echo "export master=$master" >> ~/.bash_profile
+echo "export nodes=$nodes" >> ~/.bash_profile
+#source ~/.bash_profile
+
+#install pdsh in all nodes
+echo ==============install pdsh===============================
+pdsh -w $nodes "yum localinstall -y /tmp/pdsh/pdsh*.rpm"
+
+#scp some files
+pdsh -w $nodes "mkdir -p /root/.ssh"
+pdcp -w $nodes /etc/hosts /etc/hosts
+pdcp -w $nodes /root/.ssh/id_rsa* /root/.ssh
+pdcp -w $nodes /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo
+
+pdsh -w $nodes yum clean all && yum makecache
+
+echo "=============init completed!==========================================="
+#for ip in ${!all_host[@]}
+#do
+#    hostname=${all_host[$ip]};
+#    scp /etc/hosts root@$ip:/etc/hosts
+#    echo "change to aliyun yum repo"
+#    scp /etc/yum.repos.d/CentOS-Base.repo root@$ip:/etc/yum.repos.d/CentOS-Base.repo
+#    #copy files
+#    scp -r dist root@$ip:/root
+#    scp k8s_env.sh root@$ip:/root
+#done;
+#pdsh -w $all_hosts  "sed -i '/ForwardAgent/ {s/no/yes/;s/#//}' /etc/ssh/ssh_config"

@@ -1,5 +1,7 @@
 #/bin/bash
-DIST=dist
+
+K8S_HOME=/root/k8s
+DIST=$K8S_HOME/dist
 #install docker
 docker version || yum install -y $DIST/docker-ce-se*.rpm $DIST/docker-ce-17*.rpm
 mkdir -p /etc/docker
