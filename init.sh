@@ -6,6 +6,8 @@ PDSH=$DIST/pdsh
 EXPECT=$DIST/expect
 declare -A all_host=()
 all_hosts=
+
+#add aliyun yum repo
 ./aliyun_yum_repo.sh
 
 #install ssh
@@ -122,14 +124,4 @@ pdcp -w $nodes /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.re
 pdsh -w $nodes yum clean all && yum makecache
 
 echo "=============init completed!==========================================="
-#for ip in ${!all_host[@]}
-#do
-#    hostname=${all_host[$ip]};
-#    scp /etc/hosts root@$ip:/etc/hosts
-#    echo "change to aliyun yum repo"
-#    scp /etc/yum.repos.d/CentOS-Base.repo root@$ip:/etc/yum.repos.d/CentOS-Base.repo
-#    #copy files
-#    scp -r dist root@$ip:/root
-#    scp k8s_env.sh root@$ip:/root
-#done;
 #pdsh -w $all_hosts  "sed -i '/ForwardAgent/ {s/no/yes/;s/#//}' /etc/ssh/ssh_config"

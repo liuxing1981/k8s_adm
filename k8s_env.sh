@@ -7,7 +7,9 @@ docker version || yum install -y $DIST/docker-ce-se*.rpm $DIST/docker-ce-17*.rpm
 mkdir -p /etc/docker
 cat << EOF > /etc/docker/daemon.json
 {
-  "exec-opts": ["native.cgroupdriver=systemd"]
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "registry-mirrors": ["http://ef017c13.m.daocloud.io"],
+  "live-restore": true
 }
 EOF
 systemctl start docker && systemctl enable docker
