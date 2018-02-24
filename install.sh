@@ -15,7 +15,10 @@ systemctl enable kubelet && sudo systemctl start kubelet
 sleep 10
 export KUBECONFIG=/etc/kubernetes/admin.conf
 echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> ~/.bash_profile
+#bash completion
+echo "source <(kubectl completion bash)">> ~/.bash_profile
 source ~/.bash_profile
+
 kubectl create -f $DIST/kube-flannel.yml
 sleep 10
 token=`kubeadm token create`
@@ -24,4 +27,6 @@ pdsh -w $nodes kubeadm join --token $token $master:6443 --discovery-token-unsafe
 #clear 
 #pdsh -w $nodes  "rm -rf K8S_HOME"
 sleep 10
+
+
 kubectl get nodes
