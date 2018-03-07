@@ -11,7 +11,7 @@ pdsh -w $all_hosts $K8S_HOME/k8s_env.sh
  
 #master execute
 kubeadm init --kubernetes-version=v1.9.0 --pod-network-cidr=10.244.0.0/16
-systemctl enable kubelet && sudo systemctl start kubelet
+systemctl enable kubelet && systemctl start kubelet
 sleep 10
 export KUBECONFIG=/etc/kubernetes/admin.conf
 echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> ~/.bash_profile

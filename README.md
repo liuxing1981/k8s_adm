@@ -12,3 +12,12 @@
    ```
      source init.sh && source install.sh 
    ```
+
+
+## add some new nodes(only suit for k8s cluster that is installed by above scripts)
+
+#### 1 edit the hosts file and append some information nodes like: "ip hostname"
+#### 2 run script
+   ```
+     source init.sh && source add_node.sh
+   ```
