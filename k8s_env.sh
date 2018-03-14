@@ -17,7 +17,7 @@ systemctl start docker && systemctl enable docker
 #stop firewall and selinux
 systemctl stop firewalld && systemctl disable firewalld
 if ! cat /etc/selinux/config | grep '^SELINUX=disabled';then
-    cat SELINUX=disabled >> /etc/selinux/config
+    echo SELINUX=disabled >> /etc/selinux/config
 fi
 setenforce 0
 swapoff -a
